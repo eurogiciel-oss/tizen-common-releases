@@ -1,0 +1,123 @@
+#!/bin/bash 
+
+TOPDIR=$(cd $(dirname $0)/..; pwd -P)
+TEMPLATEDIR=$TOPDIR/template/
+THEME=qa
+
+reltype=$1
+relurl=$2 # the snapshot url
+qaid=$3 # qa report id
+outdir=$4 # outputdir
+
+declare -A infos
+infos[distro]="Tizen Common 3.0"
+infos[obsproject]="Tizen:Common"
+infos[reltype]=$reltype
+infos[comments_file]=$TOPDIR/${reltype}_comments.txt
+infos[bugs_file]=$TOPDIR/${reltype}_bugs.txt
+
+if [ ! -d $outdir ]; then
+	echo "Invalid output dir" >&2
+	exit 1
+fi
+
+XMLSTARLET=$(which xml || which xmlstarlet)
+if [ -z "$XMLSTARLET" ]; then
+	echo "Please install xmlstarlet" >&2
+	exit 1
+fi
+
+tmpfile=$(mktemp $(basename $0).XXXXXX)
+trap "rm -f $tmpfile" STOP INT QUIT EXIT
+
+function run_asciidoc() {
+	local outputfile=$1
+
+	# build variables options
+	declare -a attribs
+	for k in ${!infos[*]}; do
+		v=${infos[$k]}
+		if [ -z "$v" ]; then
+				echo "Invalid value for $k"
+				exit 1
+		fi
+		attribs+=("--attribute=$k=$v")
+		echo $k : $v
+	done
+
+	echo "Generating output from template"
+
+ 	asciidoc --doctype=article \
+		--attribute=stylesdir=$TEMPLATEDIR/themes/$THEME/css \
+		--attribute=scriptsdir=$TEMPLATEDIR/themes/$THEME/js \
+		--attribute=iconsdir=$TEMPLATEDIR/themes/$THEME/icons \
+		"${attribs[@]}" \
+		--conf-file=$TEMPLATEDIR/conf/asciidoc_document.conf \
+		--out-file=$outputfile \
+		$TEMPLATEDIR/template.asciidoc
+
+	echo "Output generated in $outputfile"
+	echo $vars
+}
+
+function get_snapshot_infos() {
+	echo "Getting snapshot infos..."
+
+	# extract infos from build.xml
+	curl --silent $relurl/builddata/build.xml >$tmpfile
+	infos[snapshot_id]=$($XMLSTARLET sel -t -v "/build/id/text()" <$tmpfile 2>/dev/null)
+	infos[relarch]=$($XMLSTARLET sel -t -v "/build/archs/arch/text()" <$tmpfile 2>/dev/null)
+	infos[relname]=$($XMLSTARLET sel -t -v "/build/repos/repo/text()" <$tmpfile 2>/dev/null)
+
+	# substitute 'latest' by real snapshot id
+	infos[snapshot_url]=${relurl/%latest/${infos[snapshot_id]}}
+
+	# extract infos from repomd.xml
+	curl --silent $relurl/repos/${infos[relname]}/${infos[relarch]}/packages/repodata/repomd.xml >$tmpfile
+
+	local ts=$($XMLSTARLET sel -N r=http://linux.duke.edu/metadata/repo -t -v "/r:repomd/r:revision/text()" <$tmpfile 2>/dev/null)
+	infos[relnum]=$(date +%Y%m%d -u -d "@$ts")
+	infos[builddate]=$(date -u -d "@$ts")
+
+	# check report pages
+	if curl -v ${infos[snapshot_url]}/builddata/reports/index.html 2>&1 | grep "404 Not Found" >/dev/null;  then
+		infos[report_url]="No report available."
+		infos[report_url_text]=" "
+		echo "WARNING: no report found for snapshot" >&2
+	else
+		infos[report_url]=${infos[snapshot_url]}/builddata/reports/
+		infos[report_url_text]="[Build report]"
+	fi
+
+	# check qareport url
+	case ${infos[relarch]} in
+			ia32)
+				infos[qareport_url]="https://qarpt.tizen.org/3.0/Common32/Sanity%20-%20automated%20tests"
+				if [ -n "$qaid" ]; then
+					infos[qareport_url]="${infos[qareport_url]}/Lenovo%20X230%20Tablet/$qaid"
+					infos[qareport_url_text]="[QA Report #$qaid]"
+				fi
+				;;
+			x86_64)
+				infos[qareport_url]="https://qarpt.tizen.org/3.0/Common64/Sanity%20-%20automated%20tests"
+				if [ -n "$qaid" ]; then
+					infos[qareport_url]="${infos[qareport_url]}/Lenovo%20X230%20Tablet/$qaid"
+					infos[qareport_url_text]="[QA Report #$qaid]"
+				fi
+				;;
+			*)
+				infos[qareport_url]="https://qarpt.tizen.org/3.0/"
+				infos[qareport_url_text]="[QA Report site]"
+				;;
+	esac
+}
+				
+
+# get snapshot infos
+get_snapshot_infos $relurl
+
+# get diff with previous release
+# TODO
+
+run_asciidoc $outdir/${infos[relname]}_${infos[relarch]}_${infos[relnum]}.html
+

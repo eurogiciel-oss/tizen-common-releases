@@ -1,0 +1,4 @@
+This is the first announce for Tizen:Common release. 
+
+The process is currently setting up and everything is not automated yet.
+

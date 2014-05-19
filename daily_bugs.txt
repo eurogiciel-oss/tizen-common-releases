@@ -1,0 +1,3 @@
+Bugs for Tizen:Common are handled in the https://bugs.tizen.org/jira/browse/TC[TC project on JIRA]
+
+Browse the https://bugs.tizen.org/jira/issues/?jql=project%20%3D%20TC%20AND%20resolution%20%3D%20Unresolved%20ORDER%20BY%20priority%20DESC[unresolved bugs list].

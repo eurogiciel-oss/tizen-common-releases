@@ -1,0 +1,47 @@
+// ------------------ Document metadata ------------------------
+// vim: set syntax=asciidoc spell: spelllang=en
+
+:title: Tizen Common 3.0 - Release Announcement - {reltype} {relarch} release {relnum}
+// -------------------------------------------------------------
+
+= {title}
+
+[[table-1]]
+[width="100%",cols="2,8"]
+|==============================================================================================
+2+^|*Build Info*
+|Tizen project             |{distro}
+|Architecture              |{relarch}
+|Release type              |{reltype}
+|Release number				|{relnum}
+|OBS Project               |{obsproject}
+|Build ID                  |{snapshot_id}
+|Build Date                |{builddate}
+2+^|*Provisioning*
+|Snapshot URL              |{snapshot_url}
+|Repositories              |{snapshot_url}/repos/{relname}[...../repos/{relname}]
+|Images                    |{snapshot_url}/images/[...../images]
+|Build data                |{snapshot_url}/builddata/[...../builddata]
+|Wiki                      |https://wiki.tizen.org/wiki/Common[Common Page]
+|Flashing Instructions     |https://wiki.tizen.org/wiki/Common_Install[Common Install HOWTO]
+2+^|*Package changes*
+2+| {report_url}{report_url_text}
+2+^|*Comments*
+2+|
+include::{comments_file}[]
+2+^|*Test results*
+2+|See QA Report site: {qareport_url}{qareport_url_text}
+2+^|*Bugs*
+2+|
+include::{bugs_file}[]
+|==============================================================================================
+
+.Documentation/Links:
+--
+* Submitting Patches: 	https://source.tizen.org/documentation/articles/submitting-and-reviewing-patches
+* GBS: 	https://source.tizen.org/documentation/reference/git-build-system/
+* Snapshots: 	https://download.tizen.org/snapshots/tizen/common/
+* Daily Releases: 	https://download.tizen.org/releases/daily/tizen/common/
+* Weekly Releases: 	https://download.tizen.org/releases/weekly/tizen/common/
+--
+
