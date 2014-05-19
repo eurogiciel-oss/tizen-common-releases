@@ -8,7 +8,7 @@ WEEKLY_URL=https://download.tizen.org/releases/weekly/tizen/common/common-waylan
 all: help
 
 help:
-	@echo "Usage: make <daily|weekly> SNAPSHOT=snapshotid ARCH=<ia32|x86_64>"
+	@echo "Usage: make <daily|weekly> SNAPSHOT=snapshotid ARCH=<ia32|x86_64> [QAREPORTID=id]"
 
 .PHONY: daily
 daily:
